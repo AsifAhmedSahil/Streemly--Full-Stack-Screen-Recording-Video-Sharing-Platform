@@ -1,0 +1,6 @@
+{
+  "databaseURL": "https://Asifahmed-sahil-s-workspace-vn637a.eu-central-1.xata.sh/db/streemly",
+  "codegen": {
+    "output": "src/xata.ts"
+  }
+}
