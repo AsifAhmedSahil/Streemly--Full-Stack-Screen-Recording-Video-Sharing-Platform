@@ -3,10 +3,10 @@ import FileInput from "@/Components/FileInput";
 import FormField from "@/Components/FormField";
 import { MAX_THUMBNAIL_SIZE, MAX_VIDEO_SIZE } from "@/constants";
 import { useFileInput } from "@/lib/hooks/useFileInput";
-import React, { ChangeEvent, useState } from "react";
+import React, { ChangeEvent, FormEvent, useState } from "react";
 
 const page = () => {
-  const [error, setError] = useState(null);
+  const [error, setError] = useState("");
   const [submiting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
@@ -21,12 +21,45 @@ const page = () => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
+  const handleSubmit = async(e:FormEvent) =>{
+    e.preventDefault()
+
+    setIsSubmitting(true)
+
+    try {
+      if(!video.file || thumbnail.file) {
+        setError("Please upload video and thumbnail")
+        return;
+      }
+      if(!formData.title || formData.description) {
+        setError("Please fill in all the detailes")
+        return;
+      }
+
+      // upload the video to the bunny
+      // upload the thumbnail to db
+      // attach thumnail
+      // create a new db entry for the video detailes (url, data)
+      
+
+
+      
+    } catch (error) {
+      console.log("Error submitting form",error)
+      
+    } finally{
+      setIsSubmitting(false)
+    }
+
+
+
+  }
   return (
     <div className="wrapper-md upload-page">
       <h1>Upload a video</h1>
       {error && <div className="error-field">{error}</div>}
 
-      <form className="rounded-20 shadow-10 gap-6 w-full flex flex-col px-5 py-7.5">
+      <form className="rounded-20 shadow-10 gap-6 w-full flex flex-col px-5 py-7.5" onSubmit={handleSubmit}>
         <FormField
           id="title"
           label="Title"
