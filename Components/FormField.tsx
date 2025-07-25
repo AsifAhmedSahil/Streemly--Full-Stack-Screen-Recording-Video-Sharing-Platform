@@ -10,9 +10,11 @@ const FormField = ({
   as = "input",
   options = [],
 }: FormFieldProps) => {
-  const InputToProps = ({ type }: { type: string }) => {
-    if (type === "textarea") {
-      return (
+  return (
+    <div className="form-field">
+      <label htmlFor={id}>{label}</label>
+
+      {as === "textarea" ? (
         <textarea
           id={id}
           name={id}
@@ -20,9 +22,7 @@ const FormField = ({
           onChange={onChange}
           placeholder={placeholder}
         />
-      );
-    } else if (type === "select") {
-      return (
+      ) : as === "select" ? (
         <select id={id} name={id} value={value} onChange={onChange}>
           {options.map(({ label, value }) => (
             <option key={label} value={value}>
@@ -30,9 +30,7 @@ const FormField = ({
             </option>
           ))}
         </select>
-      );
-    } else {
-      return (
+      ) : (
         <input
           id={id}
           name={id}
@@ -40,13 +38,7 @@ const FormField = ({
           onChange={onChange}
           placeholder={placeholder}
         />
-      );
-    }
-  };
-  return (
-    <div className="form-field">
-      <label htmlFor={id}>{label}</label>
-      <InputToProps type={as} />
+      )}
     </div>
   );
 };

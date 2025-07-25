@@ -1,20 +1,23 @@
 "use client";
 import FileInput from "@/Components/FileInput";
 import FormField from "@/Components/FormField";
+import { MAX_THUMBNAIL_SIZE, MAX_VIDEO_SIZE } from "@/constants";
+import { useFileInput } from "@/lib/hooks/useFileInput";
 import React, { ChangeEvent, useState } from "react";
 
 const page = () => {
   const [error, setError] = useState(null);
+  const [submiting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
     visibility: "public",
   });
 
-  const video = {}
-  const thumbnail = {}
+  const video = useFileInput(MAX_VIDEO_SIZE);
+  const thumbnail = useFileInput(MAX_THUMBNAIL_SIZE);
 
-  const handleInputChange = (e: ChangeEvent) => {
+  const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
@@ -39,26 +42,26 @@ const page = () => {
           placeholder="Describe what is the video about"
           as="textarea"
         />
-        <FileInput 
+        <FileInput
           id="video"
           label="video"
           accept="video/*"
           file={video.file}
-          previewUrl = {video.previewUrl}
-          inputRef = {video.inputRef}
+          previewUrl={video.previewUrl}
+          inputRef={video.inputRef}
           onChange={video.handleFileChange}
-          onReset = {video.resetFile}
+          onReset={video.resetFile}
           type="video"
         />
-        <FileInput 
+        <FileInput
           id="thumbnail"
           label="Thumbnail"
           accept="image/*"
           file={thumbnail.file}
-          previewUrl = {thumbnail.previewUrl}
-          inputRef = {thumbnail.inputRef}
+          previewUrl={thumbnail.previewUrl}
+          inputRef={thumbnail.inputRef}
           onChange={thumbnail.handleFileChange}
-          onReset = {thumbnail.resetFile}
+          onReset={thumbnail.resetFile}
           type="image"
         />
         <FormField
@@ -69,12 +72,14 @@ const page = () => {
           placeholder="Select the visibility criteria"
           as="select"
           options={[
-            {value:"public",label:"Public"},
-            {value:"private",label:"Private"}
+            { value: "public", label: "Public" },
+            { value: "private", label: "Private" },
           ]}
         />
 
-        
+        <button type="submit" disabled={submiting} className="submit-button">
+          {submiting ? "uploading..." : "upload video"}
+        </button>
       </form>
     </div>
   );
