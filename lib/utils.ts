@@ -73,7 +73,8 @@ export const apiFetch = async <T = Record<string, unknown>>(
   const response = await fetch(url, requestOptions);
 
   if (!response.ok) {
-    throw new Error(`API error ${response.text()}`);
+    const errorText = await response.text();
+    throw new Error(`API error: ${errorText}`);
   }
 
   if (method === "DELETE" || !expectJson) {
@@ -82,6 +83,7 @@ export const apiFetch = async <T = Record<string, unknown>>(
 
   return await response.json();
 };
+
 
 // Higher order function to handle errors
 export const withErrorHandling = <T, A extends unknown[]>(

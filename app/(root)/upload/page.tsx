@@ -2,11 +2,32 @@
 import FileInput from "@/Components/FileInput";
 import FormField from "@/Components/FormField";
 import { MAX_THUMBNAIL_SIZE, MAX_VIDEO_SIZE } from "@/constants";
+import { getThumbnailUploadUrl, getVideoUploadUrl, saveVideoDetails } from "@/lib/actions/video";
 import { useFileInput } from "@/lib/hooks/useFileInput";
-import React, { ChangeEvent, FormEvent, useState } from "react";
+import { useRouter } from "next/navigation";
+import React, { ChangeEvent, FormEvent, useEffect, useState } from "react";
+
+const uploadFileToBunny = (
+  file: File,
+  uploadUrl: string,
+  accessKey: string
+): Promise<void> => {
+  return fetch(uploadUrl, {
+    method: "PUT",
+    headers: {
+      "Content-Type": file.type,
+      AccessKey: accessKey,
+    },
+    body: file,
+  }).then((response) => {
+    if (!response.ok) throw new Error("upload failed");
+  });
+};
 
 const page = () => {
+  const router = useRouter()
   const [error, setError] = useState("");
+  const [videoDuration, setVideoDuration] = useState(0);
   const [submiting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
@@ -17,49 +38,91 @@ const page = () => {
   const video = useFileInput(MAX_VIDEO_SIZE);
   const thumbnail = useFileInput(MAX_THUMBNAIL_SIZE);
 
+  useEffect(()=>{
+    if(video.duration !== null || 0){
+      setVideoDuration(video.duration)
+    }
+  },[video.duration])
+
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
-  const handleSubmit = async(e:FormEvent) =>{
-    e.preventDefault()
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
 
-    setIsSubmitting(true)
+    setIsSubmitting(true);
 
     try {
-      if(!video.file || thumbnail.file) {
-        setError("Please upload video and thumbnail")
+      if (!video.file || !thumbnail.file) {
+        setError("Please upload video and thumbnail");
         return;
       }
-      if(!formData.title || formData.description) {
-        setError("Please fill in all the detailes")
+      if (!formData.title || !formData.description) {
+        setError("Please fill in all the detailes");
         return;
       }
 
-      // upload the video to the bunny
+      // step 0: get upload url
+      const {
+        videoId,
+        uploadUrl: videoUploadUrl,
+        accessKey: videoAccessKey,
+      } = await getVideoUploadUrl();
+
+      console.log(videoUploadUrl,videoAccessKey)
+
+      if (!videoUploadUrl || !videoAccessKey)
+        throw new Error("failed to get video upload credentials");
+
+      // step 1: upload the video to the bunny
+
+      await uploadFileToBunny(video.file, videoUploadUrl, videoAccessKey);
+
       // upload the thumbnail to db
+      const {
+        uploadUrl: thumbnailUploadUrl,
+        accessKey: thumbnailAccessKey,
+        cdnUrl: thumbnailCdnUrl,
+      } = await getThumbnailUploadUrl(videoId);
+
+      if (!thumbnailUploadUrl || !thumbnailAccessKey || !thumbnailCdnUrl)
+        throw new Error("failed to get thumbnail upload credentials");
+
       // attach thumnail
+      await uploadFileToBunny(
+        thumbnail.file!,
+        thumbnailUploadUrl,
+        thumbnailAccessKey
+      );
+
       // create a new db entry for the video detailes (url, data)
-      
 
+      await saveVideoDetails({
+        videoId,
+        thumbnailUrl:thumbnailCdnUrl,
+        ...formData,
+        duration:videoDuration
 
-      
+      })
+
+      router.push(`/video/${videoId}`)
+
     } catch (error) {
-      console.log("Error submitting form",error)
-      
-    } finally{
-      setIsSubmitting(false)
+      console.log("Error submitting form", error);
+    } finally {
+      setIsSubmitting(false);
     }
-
-
-
-  }
+  };
   return (
     <div className="wrapper-md upload-page">
       <h1>Upload a video</h1>
       {error && <div className="error-field">{error}</div>}
 
-      <form className="rounded-20 shadow-10 gap-6 w-full flex flex-col px-5 py-7.5" onSubmit={handleSubmit}>
+      <form
+        className="rounded-20 shadow-10 gap-6 w-full flex flex-col px-5 py-7.5"
+        onSubmit={handleSubmit}
+      >
         <FormField
           id="title"
           label="Title"
