@@ -8,6 +8,21 @@ const user ={}
 
 const Navbar = () => {
   const router = useRouter()
+  const handleLogout = async () => {
+    try {
+      const res = await fetch("/api/auth/sign-out", {
+        method: "POST",
+      });
+
+      if (res.ok) {
+        router.push("/sign-in"); // Or refresh: router.refresh();
+      } else {
+        console.error("Failed to logout");
+      }
+    } catch (error) {
+      console.error("Logout error", error);
+    }
+  };
   return (
     <header className="navbar">
       <nav>
@@ -22,7 +37,7 @@ const Navbar = () => {
             <button onClick={()=>router.push("/profile/123")}>
               <Image src="/assets/images/dummy.jpg" alt="dummy" width={36} height={36} className="rounded-full aspect-square"/>
             </button>
-            <button>
+            <button onClick={handleLogout}>
               <Image src="/assets/icons/logout.svg" alt="logout" width={24} height={24} className="rotate-180"/>
             </button>
           </figure>
