@@ -249,7 +249,7 @@ declare interface DropdownListProps {
 }
 
 declare interface EmptyStateProps {
-  icon: string;
+  icon: React.ReactNode;
   title: string;
   description: string;
 }
