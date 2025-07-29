@@ -44,6 +44,26 @@ const page = () => {
     }
   },[video.duration])
 
+  useEffect(()=>{
+      const checkForRecordedVideo = async()=>{
+        try {
+          const stored = sessionStorage.getItem("recordedVideo")
+
+          if(!stored) return;
+
+          const {url,name,type,duration} = JSON.parse(stored)
+
+          const blob = await fetch(url).then((res) => res.blob())
+
+          const file = new File([blob],name, {type, lastModified: Date.now()})
+          
+        } catch (error) {
+          console.error(error,"Error for recorded video fetching!")
+          
+        }
+      }
+  },[video])
+
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
