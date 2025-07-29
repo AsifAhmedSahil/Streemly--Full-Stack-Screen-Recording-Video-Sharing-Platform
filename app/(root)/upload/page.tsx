@@ -2,7 +2,11 @@
 import FileInput from "@/Components/FileInput";
 import FormField from "@/Components/FormField";
 import { MAX_THUMBNAIL_SIZE, MAX_VIDEO_SIZE } from "@/constants";
-import { getThumbnailUploadUrl, getVideoUploadUrl, saveVideoDetails } from "@/lib/actions/video";
+import {
+  getThumbnailUploadUrl,
+  getVideoUploadUrl,
+  saveVideoDetails,
+} from "@/lib/actions/video";
 import { useFileInput } from "@/lib/hooks/useFileInput";
 import { useRouter } from "next/navigation";
 import React, { ChangeEvent, FormEvent, useEffect, useState } from "react";
@@ -25,7 +29,7 @@ const uploadFileToBunny = (
 };
 
 const page = () => {
-  const router = useRouter()
+  const router = useRouter();
   const [error, setError] = useState("");
   const [videoDuration, setVideoDuration] = useState(0);
   const [submiting, setIsSubmitting] = useState(false);
@@ -38,31 +42,48 @@ const page = () => {
   const video = useFileInput(MAX_VIDEO_SIZE);
   const thumbnail = useFileInput(MAX_THUMBNAIL_SIZE);
 
-  useEffect(()=>{
-    if(video.duration !== null || 0){
-      setVideoDuration(video.duration)
+  useEffect(() => {
+    if (video.duration !== null || 0) {
+      setVideoDuration(video.duration);
     }
-  },[video.duration])
+  }, [video.duration]);
 
-  useEffect(()=>{
-      const checkForRecordedVideo = async()=>{
-        try {
-          const stored = sessionStorage.getItem("recordedVideo")
+  useEffect(() => {
+    const checkForRecordedVideo = async () => {
+      try {
+        const stored = sessionStorage.getItem("recordedVideo");
 
-          if(!stored) return;
+        if (!stored) return;
 
-          const {url,name,type,duration} = JSON.parse(stored)
+        const { url, name, type, duration } = JSON.parse(stored);
 
-          const blob = await fetch(url).then((res) => res.blob())
+        const blob = await fetch(url).then((res) => res.blob());
 
-          const file = new File([blob],name, {type, lastModified: Date.now()})
-          
-        } catch (error) {
-          console.error(error,"Error for recorded video fetching!")
-          
+        const file = new File([blob], name, { type, lastModified: Date.now() });
+
+        if (video.inputRef.current) {
+          const dataTransfer = new DataTransfer();
+          dataTransfer.items.add(file);
+          video.inputRef.current.files = dataTransfer.files;
+
+          const event = new Event("change", { bubbles: true });
+          video.inputRef.current.dispatchEvent(event);
+
+          video.handleFileChange({
+            target: { files: dataTransfer.files },
+          } as ChangeEvent<HTMLInputElement>);
         }
+
+        if (duration) setVideoDuration(duration);
+
+        sessionStorage.removeItem("recordedVideo");
+        URL.revokeObjectURL(url);
+      } catch (error) {
+        console.error(error, "Error for recorded video fetching!");
       }
-  },[video])
+    };
+    checkForRecordedVideo()
+  }, [video]);
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -90,7 +111,7 @@ const page = () => {
         accessKey: videoAccessKey,
       } = await getVideoUploadUrl();
 
-      console.log(videoUploadUrl,videoAccessKey)
+      console.log(videoUploadUrl, videoAccessKey);
 
       if (!videoUploadUrl || !videoAccessKey)
         throw new Error("failed to get video upload credentials");
@@ -120,14 +141,12 @@ const page = () => {
 
       await saveVideoDetails({
         videoId,
-        thumbnailUrl:thumbnailCdnUrl,
+        thumbnailUrl: thumbnailCdnUrl,
         ...formData,
-        duration:videoDuration
+        duration: videoDuration,
+      });
 
-      })
-
-      router.push(`/video/${videoId}`)
-
+      router.push(`/`);
     } catch (error) {
       console.log("Error submitting form", error);
     } finally {

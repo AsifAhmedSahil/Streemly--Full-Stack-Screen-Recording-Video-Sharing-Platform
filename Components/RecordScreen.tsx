@@ -42,7 +42,7 @@ const RecordScreen = () => {
   const goToUpload = () =>{
     if(!recordedBlob) return;
     const url = URL.createObjectURL(recordedBlob)
-    sessionStorage.setItem("rcordedVideo",
+    sessionStorage.setItem("recordedVideo",
         JSON.stringify({
             url,
             name:"screen-recording.webm",
