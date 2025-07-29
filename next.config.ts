@@ -8,7 +8,7 @@ const nextConfig: NextConfig = {
         hostname:"sahil-streemly.b-cdn.net" , protocol:"https",port:"",pathname:"/**"
       },
       {
-        hostname:"lh3.googleusercontent.com" , protocol:"https",port:"",pathname:"/**"
+        hostname:"*" , protocol:"https",port:"",pathname:"/**"
       },
     ]
   }
