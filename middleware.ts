@@ -1,31 +1,21 @@
-import { NextRequest, NextResponse } from "next/server";
-import { auth } from "./lib/auth";
-import { headers } from "next/headers";
-import aj from "./lib/arject";
-import { createMiddleware, detectBot, shield } from "@arcjet/next";
+import { NextFetchEvent, NextRequest, NextResponse } from "next/server";
+import { arcjetMiddleware } from "./middlewares/arcjet-middleware";
+import { authMiddleware } from "./middlewares/auth-middleware";
 
 
-export async function middleware(request:NextRequest,response:NextResponse){
-    const session = await auth.api.getSession({
-        headers:await headers()
-    })
+export async function middleware(request: NextRequest,event: NextFetchEvent) {
+  // ✅ Step 1: Arcjet protection
+   const arcjetResult = await arcjetMiddleware(request, event);
+  if (arcjetResult) return arcjetResult;
 
-    if(!session){
-      return NextResponse.redirect(new URL('/sign-in', request.url));
+  // ✅ Step 2: Auth protection
+  const authResult = await authMiddleware(request);
+  if (authResult) return authResult;
 
-    }
-
-    return NextResponse.next()
-
-
+  return NextResponse.next(); // allow to continue
 }
 
-const validate = aj
-    .withRule(shield({mode:"LIVE"}))
-    .withRule(detectBot({mode:"LIVE",allow:['CATEGORY:SEARCH_ENGINE',"GOOGLE_CRAWLER"]}))
-
-export default createMiddleware(validate)
-
-export const config ={
-    matcher:["/((?!api|_next/static|_next/image|favicon.ico|sign-in|assets).*)"]
-}
+// ✅ Same matcher
+export const config = {
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|sign-in|assets).*)"],
+};
